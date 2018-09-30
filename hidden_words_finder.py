@@ -23,6 +23,9 @@ global active_words
 MIN_WORD_SIZE = 3
 MAX_WORD_SIZE = 5
 
+def debug():
+	import ipdb
+	ipdb.set_trace()
 
 def add_args(parser):
 	parser.add_argument('--input', '-i', action="store",  required=True, help='input file')
@@ -59,7 +62,7 @@ def build_dictionary(filedesc):
 
 def print_active_words():
 	global active_words
-	for i in range(0,MAX_WORD_SIZE):
+	for i in range(MAX_WORD_SIZE-1,MAX_WORD_SIZE):
 		print active_words[i][:i+1]
 
 #init the active active_words list
@@ -67,12 +70,12 @@ def init_active_words():
 	global active_words
 	active_words = []
 	for i in range(0,MAX_WORD_SIZE):
-		row = ["" for j in range(0,MAX_WORD_SIZE)]
+		row = ["***" for j in range(0,MAX_WORD_SIZE)]
 		active_words.append(row)
 
 	for i in range(0,MAX_WORD_SIZE):
 		for j in range(0,i+1):
-			active_words[i][j] = ' '*(i+1)
+			active_words[i][j] = '_'*(i+1)
 
 def clean_search_line(line):
 	regex = re.compile('[^a-zA-Z]')
@@ -86,23 +89,29 @@ def search_words_in_dict(line):
 	global active_words
 
 	for i in range(0,MAX_WORD_SIZE):
-		if active_words[0] in dictionary:
-			print active_words[0]
+		if active_words[i][i] in dictionary:
+			print "found word: "+ active_words[i][i]
 			print line
+		#remove last element in the list
+		active_words[i].pop(i)
+		#instead insert a new element and start building a new word
+		new_str = (i+1)*"_"
+		active_words[i] = [new_str]+active_words[i]
+	print_active_words()
 
-def update_active_words(c,index):
-	for i in range(0,MAX_WORD_SIZE_TO_SEARCH):
-		active_words[i] = active_words[i][1:]+c
-	print active_words
+def update_active_words(c):
+	for i in range(0,MAX_WORD_SIZE):
+		for j in range(0,i+1):
+			active_words[i][j] = active_words[i][j][1:]+c
+	print c + ":"
+	print_active_words()
 
 def search_words(filedesc):
 	filedesc.seek(0)
-	letter_index = 0
 	for line in filedesc:
 		line = clean_search_line(line)
 		for c in line:
-			letter_index+=1
-			update_active_words(c,letter_index)
+			update_active_words(c)
 			print("active_words")
 			search_active_words_in_dict(line)
 
@@ -117,7 +126,25 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	filedesc = openfile(args.input)
 	init_active_words()
-	update_active_words("a")
+	# update_active_words("a")
+	# update_active_words("b")
+	# update_active_words("c")
+	# update_active_words("d")
+	# update_active_words("e")
+	# search_words_in_dict(33)
+	# update_active_words("f")
+	# search_words_in_dict(33)
+	# update_active_words("g")
+	# search_words_in_dict(33)
+	# update_active_words("h")
+	# search_words_in_dict(33)
+	# update_active_words("i")
+	# search_words_in_dict(33)
+	# update_active_words("j")
+	# search_words_in_dict(33)
+	# update_active_words("k")
+	# search_words_in_dict(33)
+
 	build_dictionary(filedesc)
 	search_words(filedesc)
 	print len(dictionary)

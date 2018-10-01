@@ -22,6 +22,9 @@ global active_words
 
 MIN_WORD_SIZE = 3
 MAX_WORD_SIZE = 5
+MAX_JUMP_SIZE = 6
+
+NUM_OF_WORDS_INDEXES = MAX_WORD_SIZE-MIN_WORD_SIZE+1
 
 def debug():
 	import ipdb
@@ -60,22 +63,25 @@ def build_dictionary(filedesc):
 		
 		dictionary = dictionary.union(set(line))
 
-def print_active_words():
+def print_active_words(text=""):
 	global active_words
-	for i in range(MAX_WORD_SIZE-1,MAX_WORD_SIZE):
-		print active_words[i][:i+1]
+	print text
+	for i in range(0,NUM_OF_WORDS_INDEXES):
+		print active_words[i]
 
 #init the active active_words list
 def init_active_words():
 	global active_words
 	active_words = []
-	for i in range(0,MAX_WORD_SIZE):
+	for i in range(0,NUM_OF_WORDS_INDEXES):
 		row = ["***" for j in range(0,MAX_WORD_SIZE)]
 		active_words.append(row)
 
-	for i in range(0,MAX_WORD_SIZE):
-		for j in range(0,i+1):
-			active_words[i][j] = '_'*(i+1)
+	for i in range(0,NUM_OF_WORDS_INDEXES):
+		for j in range(0,i+MIN_WORD_SIZE):
+			active_words[i][j] = '_'*(MIN_WORD_SIZE+i)
+
+	print_active_words("init is:")
 
 def clean_search_line(line):
 	regex = re.compile('[^a-zA-Z]')
@@ -84,24 +90,26 @@ def clean_search_line(line):
 	line = line.lower()
 	return line
 
-def search_words_in_dict(line):
+def search_active_words_in_dict(line):
 	global dictionary
 	global active_words
 
-	for i in range(0,MAX_WORD_SIZE):
-		if active_words[i][i] in dictionary:
-			print "found word: "+ active_words[i][i]
+	for i in range(0,NUM_OF_WORDS_INDEXES):
+		last_word_idx = i+MIN_WORD_SIZE-1
+		print last_word_idx
+		if active_words[i][last_word_idx] in dictionary:
+			print "found word: "+ active_words[i][last_word_idx]
 			print line
 		#remove last element in the list
-		active_words[i].pop(i)
+		active_words[i].pop(last_word_idx)
 		#instead insert a new element and start building a new word
-		new_str = (i+1)*"_"
+		new_str = (i+MIN_WORD_SIZE)*"_"
 		active_words[i] = [new_str]+active_words[i]
 	print_active_words()
 
 def update_active_words(c):
-	for i in range(0,MAX_WORD_SIZE):
-		for j in range(0,i+1):
+	for i in range(0,NUM_OF_WORDS_INDEXES):
+		for j in range(0,i+MIN_WORD_SIZE):
 			active_words[i][j] = active_words[i][j][1:]+c
 	print c + ":"
 	print_active_words()
@@ -111,9 +119,10 @@ def search_words(filedesc):
 	for line in filedesc:
 		line = clean_search_line(line)
 		for c in line:
-			update_active_words(c)
-			print("active_words")
-			search_active_words_in_dict(line)
+			if c.isalpha():
+				update_active_words(c)
+				print("active_words")
+				search_active_words_in_dict(line)
 
 
 if __name__ == "__main__":
@@ -126,24 +135,24 @@ if __name__ == "__main__":
 	args = parser.parse_args()
 	filedesc = openfile(args.input)
 	init_active_words()
+	# search_active_words_in_dict("e")
+	# search_active_words_in_dict("r")
+	# search_active_words_in_dict("a")
+	# search_active_words_in_dict("n")
+	# search_active_words_in_dict("h")
+	# search_active_words_in_dict(33)
+	# update_active_words("o")
+	# search_active_words_in_dict(33)
+	# update_active_words("w")
+	# search_active_words_in_dict(33)
 	# update_active_words("a")
-	# update_active_words("b")
-	# update_active_words("c")
-	# update_active_words("d")
+	# search_active_words_in_dict(33)
+	# update_active_words("r")
+	# search_active_words_in_dict(33)
 	# update_active_words("e")
-	# search_words_in_dict(33)
-	# update_active_words("f")
-	# search_words_in_dict(33)
-	# update_active_words("g")
-	# search_words_in_dict(33)
-	# update_active_words("h")
-	# search_words_in_dict(33)
-	# update_active_words("i")
-	# search_words_in_dict(33)
-	# update_active_words("j")
-	# search_words_in_dict(33)
-	# update_active_words("k")
-	# search_words_in_dict(33)
+	# search_active_words_in_dict(33)
+	# update_active_words("u")
+	# search_active_words_in_dict(33)
 
 	build_dictionary(filedesc)
 	search_words(filedesc)

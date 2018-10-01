@@ -66,20 +66,21 @@ def build_dictionary(filedesc):
 def print_active_words(text=""):
 	global active_words
 	print text
-	for i in range(0,NUM_OF_WORDS_INDEXES):
-		print active_words[i]
+	print active_words
 
 #init the active active_words list
 def init_active_words():
 	global active_words
 	active_words = []
-	for i in range(0,NUM_OF_WORDS_INDEXES):
-		row = ["***" for j in range(0,MAX_WORD_SIZE)]
-		active_words.append(row)
+	#for i in range(0,NUM_OF_WORDS_INDEXES):
+	row = ["***" for j in range(0,MAX_WORD_SIZE)]
 
-	for i in range(0,NUM_OF_WORDS_INDEXES):
-		for j in range(0,i+MIN_WORD_SIZE):
-			active_words[i][j] = '_'*(MIN_WORD_SIZE+i)
+	#todo later add jumps here
+	active_words = row
+	print active_words
+
+	for i in range(0,MAX_WORD_SIZE):
+		active_words[i] = '_'*(MAX_WORD_SIZE)
 
 	print_active_words("init is:")
 
@@ -90,28 +91,34 @@ def clean_search_line(line):
 	line = line.lower()
 	return line
 
-def search_active_words_in_dict(line):
+def active_words_search_in_dict(line):
 	global dictionary
 	global active_words
+	last_word_idx = MAX_WORD_SIZE-1
 
-	for i in range(0,NUM_OF_WORDS_INDEXES):
-		last_word_idx = i+MIN_WORD_SIZE-1
-		print last_word_idx
-		if active_words[i][last_word_idx] in dictionary:
-			print "found word: "+ active_words[i][last_word_idx]
+	#check the dictionaly for all words sizes
+	for i in range(MIN_WORD_SIZE,MAX_WORD_SIZE+1):
+		print active_words[last_word_idx][-1*i:]
+		if active_words[last_word_idx][-1*i:] in dictionary:
+			print "found word: "+ active_words[last_word_idx][-1*i:]
 			print line
-		#remove last element in the list
-		active_words[i].pop(last_word_idx)
-		#instead insert a new element and start building a new word
-		new_str = (i+MIN_WORD_SIZE)*"_"
-		active_words[i] = [new_str]+active_words[i]
+
+	
+def active_words_add_letter(c):
+
+	for i in range(0,MAX_WORD_SIZE):
+		active_words[i]= active_words[i][1:]+c
+	print c + ":"
 	print_active_words()
 
-def update_active_words(c):
-	for i in range(0,NUM_OF_WORDS_INDEXES):
-		for j in range(0,i+MIN_WORD_SIZE):
-			active_words[i][j] = active_words[i][j][1:]+c
-	print c + ":"
+def active_words_remove_entry():
+	global active_words
+	last_word_idx = MAX_WORD_SIZE-1
+	#remove last element in the list
+	active_words.pop(last_word_idx)
+	#instead insert a new element and start building a new word
+	new_str = (MAX_WORD_SIZE)*"_"
+	active_words = [new_str]+active_words
 	print_active_words()
 
 def search_words(filedesc):
@@ -120,9 +127,12 @@ def search_words(filedesc):
 		line = clean_search_line(line)
 		for c in line:
 			if c.isalpha():
-				update_active_words(c)
+				active_words_add_letter(c)
+				if active_words[-1] == "blabl":
+					debug()
 				print("active_words")
-				search_active_words_in_dict(line)
+				active_words_search_in_dict(line)
+				active_words_remove_entry()
 
 
 if __name__ == "__main__":

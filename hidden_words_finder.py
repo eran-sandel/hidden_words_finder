@@ -6,23 +6,11 @@ import re
 
 global args
 global dictionary
-global active_words
 
-# All words with length N. 
-#on each column replace letter in +1 position with the current letter.
-#i.e if the current letter is "c", row 2 will look:
-# ['caa', 'aca', 'aac']
-
-#active_words:
-# ['a']
-# ['aa', 'aa']
-# ['aaa', 'aaa', 'aaa']
-# ['aaaa', 'aaaa', 'aaaa', 'aaaa']
-# ['aaaaa', 'aaaaa', 'aaaaa', 'aaaaa', 'aaaaa']
-
-MIN_WORD_SIZE = 3
-MAX_WORD_SIZE = 5
-MAX_JUMP_SIZE = 6
+MIN_WORD_SIZE = 5
+MAX_WORD_SIZE = 10
+MAX_JUMP_SIZE = 18
+MIN_JUMP_SIZE = 2
 
 NUM_OF_WORDS_INDEXES = MAX_WORD_SIZE-MIN_WORD_SIZE+1
 
@@ -32,6 +20,7 @@ def debug():
 
 def add_args(parser):
 	parser.add_argument('--input', '-i', action="store",  required=True, help='input file')
+	parser.add_argument('--dict', '-d', action="store",  required=False, help='dictionary file. In not set, dictionary will be taken from input file')
 
 
 def openfile(filename):
@@ -51,7 +40,7 @@ def clean_dictionary_line(line):
 	line = [word.lower() for word in line if len(word)>=MIN_WORD_SIZE and len(word) <=MAX_WORD_SIZE]
 	return line
 
-def build_dictionary(filedesc):
+def build_dictionary_from_file(filedesc):
 	global dictionary
 	#import ipdb
 	#ipdb.set_trace()
@@ -62,78 +51,42 @@ def build_dictionary(filedesc):
 		line = clean_dictionary_line(line)
 		
 		dictionary = dictionary.union(set(line))
+	filedesc.seek(0)
 
-def print_active_words(text=""):
-	global active_words
-	print text
-	print active_words
+def build_dictionary_from_dict_file(filedesc):
+	global dictionary
+	dictionary = filedesc.read().lower().split()
 
-#init the active active_words list
-def init_active_words():
-	global active_words
-	active_words = []
-	#for i in range(0,NUM_OF_WORDS_INDEXES):
-	row = ["***" for j in range(0,MAX_WORD_SIZE)]
-
-	#todo later add jumps here
-	active_words = row
-	print active_words
-
-	for i in range(0,MAX_WORD_SIZE):
-		active_words[i] = '_'*(MAX_WORD_SIZE)
-
-	print_active_words("init is:")
+def get_all_permutation_from_here(text,idx):
+	words = []
+	for jump in range(MIN_JUMP_SIZE,MAX_JUMP_SIZE+1):
+		words.append(text[idx:idx+MAX_WORD_SIZE*jump:jump])
+	return words
 
 def clean_search_line(line):
 	regex = re.compile('[^a-zA-Z]')
 	#First parameter is the replacement, second parameter is your input string
-	line = regex.sub(' ', line)
-	line = line.lower()
+	line = regex.sub('', line).lower()
 	return line
 
-def active_words_search_in_dict(line):
-	global dictionary
-	global active_words
-	last_word_idx = MAX_WORD_SIZE-1
+def search_words_in_dict(words):
 
-	#check the dictionaly for all words sizes
-	for i in range(MIN_WORD_SIZE,MAX_WORD_SIZE+1):
-		print active_words[last_word_idx][-1*i:]
-		if active_words[last_word_idx][-1*i:] in dictionary:
-			print "found word: "+ active_words[last_word_idx][-1*i:]
-			print line
-
-	
-def active_words_add_letter(c):
-
-	for i in range(0,MAX_WORD_SIZE):
-		active_words[i]= active_words[i][1:]+c
-	print c + ":"
-	print_active_words()
-
-def active_words_remove_entry():
-	global active_words
-	last_word_idx = MAX_WORD_SIZE-1
-	#remove last element in the list
-	active_words.pop(last_word_idx)
-	#instead insert a new element and start building a new word
-	new_str = (MAX_WORD_SIZE)*"_"
-	active_words = [new_str]+active_words
-	print_active_words()
+	jumpIdx = MIN_JUMP_SIZE
+	for word in words:
+		for word_size in range(MIN_WORD_SIZE,MAX_WORD_SIZE+1):
+			#print word[-1*word_size:]
+			if word[-1*word_size:] in dictionary:
+				print "found word: "+ word[-1*word_size:] + ", jump: " + str(jumpIdx)
+		jumpIdx+=1
 
 def search_words(filedesc):
-	filedesc.seek(0)
-	for line in filedesc:
-		line = clean_search_line(line)
-		for c in line:
-			if c.isalpha():
-				active_words_add_letter(c)
-				if active_words[-1] == "blabl":
-					debug()
-				print("active_words")
-				active_words_search_in_dict(line)
-				active_words_remove_entry()
-
+	text = filedesc.read()
+	text = clean_search_line(text)
+	idx = 0
+	for c in text:
+		words = get_all_permutation_from_here(text,idx)
+		search_words_in_dict(words)
+		idx+=1
 
 if __name__ == "__main__":
 	global args
@@ -144,26 +97,12 @@ if __name__ == "__main__":
 	add_args(parser)
 	args = parser.parse_args()
 	filedesc = openfile(args.input)
-	init_active_words()
-	# search_active_words_in_dict("e")
-	# search_active_words_in_dict("r")
-	# search_active_words_in_dict("a")
-	# search_active_words_in_dict("n")
-	# search_active_words_in_dict("h")
-	# search_active_words_in_dict(33)
-	# update_active_words("o")
-	# search_active_words_in_dict(33)
-	# update_active_words("w")
-	# search_active_words_in_dict(33)
-	# update_active_words("a")
-	# search_active_words_in_dict(33)
-	# update_active_words("r")
-	# search_active_words_in_dict(33)
-	# update_active_words("e")
-	# search_active_words_in_dict(33)
-	# update_active_words("u")
-	# search_active_words_in_dict(33)
+	if args.dict is not None:
+		dictdesc = openfile(args.dict)
+		build_dictionary_from_dict_file(dictdesc)
+	else:
+		build_dictionary_from_file(filedesc)
 
-	build_dictionary(filedesc)
+	print "dictionary length is: "+ str(len(dictionary))
+	#init_active_words()
 	search_words(filedesc)
-	print len(dictionary)

@@ -10,9 +10,7 @@ global dictionary
 MIN_WORD_SIZE = 5
 MAX_WORD_SIZE = 10
 MAX_JUMP_SIZE = 18
-MIN_JUMP_SIZE = 2
-
-NUM_OF_WORDS_INDEXES = MAX_WORD_SIZE-MIN_WORD_SIZE+1
+MIN_JUMP_SIZE = 5
 
 def debug():
 	import ipdb
@@ -40,7 +38,7 @@ def clean_dictionary_line(line):
 	line = [word.lower() for word in line if len(word)>=MIN_WORD_SIZE and len(word) <=MAX_WORD_SIZE]
 	return line
 
-def build_dictionary_from_file(filedesc):
+def build_dictionary_from_input_file(filedesc):
 	global dictionary
 	#import ipdb
 	#ipdb.set_trace()
@@ -70,11 +68,11 @@ def clean_search_line(line):
 	return line
 
 def search_words_in_dict(words):
-
 	jumpIdx = MIN_JUMP_SIZE
+	#go over all the words found
 	for word in words:
+		#for each word get all the valid word lengths
 		for word_size in range(MIN_WORD_SIZE,MAX_WORD_SIZE+1):
-			#print word[-1*word_size:]
 			if word[-1*word_size:] in dictionary:
 				print "found word: "+ word[-1*word_size:] + ", jump: " + str(jumpIdx)
 		jumpIdx+=1
@@ -97,12 +95,13 @@ if __name__ == "__main__":
 	add_args(parser)
 	args = parser.parse_args()
 	filedesc = openfile(args.input)
+
+	#get dictionary
 	if args.dict is not None:
 		dictdesc = openfile(args.dict)
 		build_dictionary_from_dict_file(dictdesc)
 	else:
-		build_dictionary_from_file(filedesc)
-
+		build_dictionary_from_input_file(filedesc)
 	print "dictionary length is: "+ str(len(dictionary))
-	#init_active_words()
+
 	search_words(filedesc)
